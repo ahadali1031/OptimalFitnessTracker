@@ -3,5 +3,4 @@ export enum Muscle {
     HAMSTRINGS = "hamstrings",
     CALVES = "calves",
     GLUTES = "glutes"
-
 }

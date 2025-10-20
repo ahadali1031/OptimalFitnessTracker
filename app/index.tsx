@@ -1,10 +1,17 @@
-import { Text, View, Pressable } from "react-native";
+import { Text, View } from "react-native";
 import { Muscle } from "../constants/muscles"
 import { useState } from "react";
-
+import ExerciseRow from "../components/ExerciseRow"
 export default function Index() {
 
   const[selectedExerciseID, setSelectedExerciseID] = useState<string | null>(null);
+  function handleSelect(id : string) {
+    if (id === selectedExerciseID) {
+      setSelectedExerciseID(null);
+    } else {
+      setSelectedExerciseID(id);
+    }
+  }
 
   const exercises = [
     {id: "back-squat", name: "Back Squat", muscleGroups: [Muscle.QUADS, Muscle.GLUTES, Muscle.HAMSTRINGS]},
@@ -16,13 +23,16 @@ export default function Index() {
   return (
     <View>
       { exercises.map(exercise => {
-        const isActive = exercise.id == selectedExerciseID;
+        const isActive = exercise.id === selectedExerciseID;
         return (
-          <Pressable key={exercise.id} onPress={() => setSelectedExerciseID(exercise.id)}>
-            <Text style = {{ fontWeight: isActive ? "bold" : "normal" }}> 
-              {exercise.name}
-            </Text>
-          </Pressable>
+          <ExerciseRow key={exercise.id}
+            exercise={exercise}
+            isActive={isActive}
+            latestWeight={null}
+            onPress={() => handleSelect(exercise.id)}
+          >
+            <Text>Hello, you clicked?</Text>
+          </ExerciseRow>
         );
       })}
     </View> 
