@@ -26,14 +26,19 @@ export default function ExerciseRow({
     return (
         <View>
             <Pressable style={styles.row} onPress={onPress}>
-                <Text style={[styles.name, isActive && styles.nameActive]}> 
-                {exercise.name}
-                </Text>
-                <Text style={styles.latest}>
-                    {latestWeight ?? "-"}
-                </Text>
-                {isActive && <View style={styles.expanded}>{children}</View>}
+                <View style={styles.left}>
+                    <Text style={[styles.name, isActive && styles.nameActive]}> 
+                        {exercise.name}
+                    </Text>
+                </View>
+
+                <View style={styles.right}>
+                    <Text style={styles.latest}>
+                        {latestWeight ?? "-"}
+                    </Text>
+                </View>
             </Pressable>
+            {isActive && <View style={styles.expanded}>{children}</View>}
         </View>
     );
 }
@@ -42,12 +47,19 @@ export default function ExerciseRow({
 const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB", // light gray divider
+    borderBottomColor: "#E5E7EB",
+  },
+  left: {
+    flex: 1,               // take remaining space
+    paddingRight: 12,      // little gap before the right label
+  },
+  right: {
+    minWidth: 48,          // prevents drifting when content below appears
+    alignItems: "flex-end" // keep contents pinned to the right
   },
   name: {
     fontSize: 16,
@@ -57,10 +69,13 @@ const styles = StyleSheet.create({
   },
   latest: {
     fontSize: 14,
-    color: "#6B7280", // muted gray
+    color: "#6B7280",
+    textAlign: "right",
   },
   expanded: {
     marginTop: 8,
     paddingHorizontal: 16,
+    alignItems:"flex-end"
   },
 });
+
