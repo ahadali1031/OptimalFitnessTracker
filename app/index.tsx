@@ -1,18 +1,8 @@
-import { Text, View } from "react-native";
+import { Text, View, Pressable, TextInput } from "react-native";
 import { Muscle } from "../constants/muscles"
 import { useState } from "react";
 import ExerciseRow from "../components/ExerciseRow"
 export default function Index() {
-
-  const[selectedExerciseID, setSelectedExerciseID] = useState<string | null>(null);
-  
-  function handleSelect(id : string) {
-    if (id === selectedExerciseID) {
-      setSelectedExerciseID(null);
-    } else {
-      setSelectedExerciseID(id);
-    }
-  }
 
   const exercises = [
     {id: "back-squat", name: "Back Squat", muscleGroups: [Muscle.QUADS, Muscle.GLUTES, Muscle.HAMSTRINGS]},
@@ -22,17 +12,31 @@ export default function Index() {
     {id: "bulgarian-split", name: "Bulgarian Split Squat", muscleGroups: [Muscle.QUADS, Muscle.HAMSTRINGS, Muscle.GLUTES]},
   ]
 
+  const[selectedExerciseID, setSelectedExerciseID] = useState<string | null>(null);
   const [weightsExerciseHistory, setWeightsExerciseHistory] = useState<{ [key: string]: number[] }>(() =>
-    Object.fromEntries(exercises.map(e => [e.id, [0]]))
+    Object.fromEntries(exercises.map(e => [e.id, []]))
   );
+  const [inputByExercise, setInputByExercise] = useState<{ [key: string]: string }>({});
+  function setInput(id: string, v: string) {
+    setInputByExercise(prev => ({...prev, [id]: v}));
+  }
+
+  
+  function handleSelect(id : string) {
+    if (id === selectedExerciseID) {
+      setSelectedExerciseID(null);
+    } else {
+      setSelectedExerciseID(id);
+    }
+  }
 
   function getList(id: string) {
-    return weightsExerciseHistory[id];
+    return weightsExerciseHistory[id] ?? [];
   }
 
   function getLatestWeight(id: string) {
     const list = getList(id);
-    return list[0];
+    return list.length > 0 ? list[0] : 0;
   }
 
   function insertLatestWeight(id: string, weight: number) {
@@ -45,6 +49,19 @@ export default function Index() {
       };
     });
   }
+
+  function handleAdd(exerciseId: string) {
+    const raw = (inputByExercise[exerciseId] ?? "").trim();
+    if (raw === "") return;
+    const num = Number(raw)
+    if (!Number.isFinite(num) || num < 0) {
+      return;
+    }
+    insertLatestWeight(exerciseId, num);
+    setInput(exerciseId, "");
+  }
+
+
   return (
     <View>
       { exercises.map(exercise => {
@@ -56,7 +73,53 @@ export default function Index() {
             latestWeight={getLatestWeight(exercise.id)}
             onPress={() => handleSelect(exercise.id)}
           >
-            <Text>Hello, you clicked?</Text>
+            <View style={{ flexDirection: "row", gap: 12, alignItems: "flex-start" }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontWeight: "600", marginBottom: 6 }}>Previous Weights:</Text>
+                {(() => {
+                  const previous = getList(exercise.id).slice(1).reverse();
+                  if (previous.length === 0) {
+                    return <Text style={{ color: "#6B7280" }}>None yet</Text>;
+                  }
+                  return previous.map((w, i) => (
+                    <Text key={`${exercise.id}-prev-${i}`} style={{ marginBottom: 4 }}>
+                      {w}
+                    </Text>
+                  ));
+                })()}
+              </View>
+              <View style={{ minWidth: 120 }}>
+                <TextInput
+                  value={inputByExercise[exercise.id] ?? ""}
+                  onChangeText={(t) => setInput(exercise.id, t.replace(/[^0-9]/g, ""))}
+                  keyboardType="number-pad"
+                  returnKeyType="done"
+                  onSubmitEditing={() => handleAdd(exercise.id)}
+                  placeholder="Enter Weight"
+                  style={{
+                    borderWidth: 1,
+                    borderColor: "#E5E7EB",
+                    borderRadius: 8,
+                    paddingVertical: 8,
+                    paddingHorizontal: 12,
+                  }}
+                />
+                <Pressable
+                  onPress={() => handleAdd(exercise.id)}
+                  style={{
+                    marginTop: 8,
+                    alignSelf: "flex-end",
+                    paddingVertical: 8,
+                    paddingHorizontal: 12,
+                    borderRadius: 8,
+                    backgroundColor: "#111827",
+                  }}
+                >
+                  <Text style={{ color: "white" }}>Add</Text>
+                </Pressable>
+              </View>
+            </View>
+
           </ExerciseRow>
         );
       })}
