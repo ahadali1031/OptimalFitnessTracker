@@ -4,7 +4,7 @@ import { useState } from "react";
 import ExerciseRow from "../components/ExerciseRow"
 export default function Index() {
 
-  const exercises = [
+  const catalog = [
     {id: "back-squat", name: "Back Squat", muscleGroups: [Muscle.QUADS, Muscle.GLUTES, Muscle.HAMSTRINGS]},
     {id: "leg-extensions", name: "Leg Extensions", muscleGroups: [Muscle.QUADS]},
     {id: "leg-curls", name: "Leg Curls", muscleGroups: [Muscle.HAMSTRINGS]},
@@ -13,8 +13,9 @@ export default function Index() {
   ]
 
   const[selectedExerciseID, setSelectedExerciseID] = useState<string | null>(null);
+  const[activeExerciseIds, setActiveExerciseIds] = useState<string[]>(() => catalog.map(e => e.id));
   const [weightsExerciseHistory, setWeightsExerciseHistory] = useState<{ [key: string]: number[] }>(() =>
-    Object.fromEntries(exercises.map(e => [e.id, []]))
+    Object.fromEntries(catalog.map(e => [e.id, []]))
   );
   const [inputByExercise, setInputByExercise] = useState<{ [key: string]: string }>({});
   function setInput(id: string, v: string) {
@@ -82,10 +83,12 @@ export default function Index() {
 
   return (
     <View>
-      { exercises.map(exercise => {
-        const isActive = exercise.id === selectedExerciseID;
+      { activeExerciseIds.map(id => {
+        const exercise = catalog.find(e => e.id === id);
+        if (!exercise) return null;
+        const isActive = id === selectedExerciseID;
         return (
-          <ExerciseRow key={exercise.id}
+          <ExerciseRow key={id}
             exercise={exercise}
             isActive={isActive}
             latestWeight={getLatestWeight(exercise.id)}
@@ -100,12 +103,12 @@ export default function Index() {
                     return <Text style={{ color: "#6B7280" }}>None yet</Text>;
                   }
                   return previous.map((w, i) => (
-                    <View style={{flexDirection: "row", alignItems: "baseline", marginBottom: 4}}>
-                      <View style={{ width: 20 }}>
+                    <View key={`${exercise.id}-prev-${i}`} style={{flexDirection: "row", alignItems: "baseline", marginBottom: 4}}>
+                      <View style={{ width: 30 }}>
                         <Text style={{ textAlign: 'right' }}>{w}</Text>
                       </View>
 
-                      <Pressable onPress={() => handleDeletePrevious(exercise.id, i)} hitSlop={8} style={{marginLeft: 10 }}>
+                      <Pressable onPress={() => handleDeletePrevious(exercise.id, i)} hitSlop={8} style={{marginLeft: 50 }}>
                         <Text style={{ color:"red" }}>X</Text>
                       </Pressable>
                     </View>
