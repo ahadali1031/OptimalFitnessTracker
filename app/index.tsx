@@ -21,6 +21,30 @@ export default function Index() {
     {id: "calf-raises", name: "Calf Raises", muscleGroups: [Muscle.CALVES]},
     {id: "bulgarian-split", name: "Bulgarian Split Squat", muscleGroups: [Muscle.QUADS, Muscle.HAMSTRINGS, Muscle.GLUTES]},
   ]
+
+  const [weightsExerciseHistory, setWeightsExerciseHistory] = useState<{ [key: string]: number[] }>(() =>
+    Object.fromEntries(exercises.map(e => [e.id, [0]]))
+  );
+
+  function getList(id: string) {
+    return weightsExerciseHistory[id];
+  }
+
+  function getLatestWeight(id: string) {
+    const list = getList(id);
+    return list[0];
+  }
+
+  function insertLatestWeight(id: string, weight: number) {
+    setWeightsExerciseHistory(prev => {
+      const current = prev[id] ?? [];
+      const updated = [weight, ...current];
+      return {
+        ...prev,
+        [id]: updated,
+      };
+    });
+  }
   return (
     <View>
       { exercises.map(exercise => {
@@ -29,7 +53,7 @@ export default function Index() {
           <ExerciseRow key={exercise.id}
             exercise={exercise}
             isActive={isActive}
-            latestWeight={null}
+            latestWeight={getLatestWeight(exercise.id)}
             onPress={() => handleSelect(exercise.id)}
           >
             <Text>Hello, you clicked?</Text>

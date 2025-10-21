@@ -46,9 +46,11 @@ export default function ExerciseRow({
                 </View>
 
                 <View style={styles.right}>
-                    <Text style={styles.latest}>
-                        {latestWeight ?? "-"}
-                    </Text>
+                    <View style={styles.latest}>
+                      <Text>
+                        {latestWeight}
+                      </Text>
+                    </View>
                 </View>
             </Pressable>
             {isActive && <View style={styles.expanded}>{children}</View>}
@@ -83,9 +85,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   latest: {
-    fontSize: 14,
-    color: "#6B7280",
-    textAlign: "right",
+    flexDirection: "row",
   },
   expanded: {
     marginTop: 8,
