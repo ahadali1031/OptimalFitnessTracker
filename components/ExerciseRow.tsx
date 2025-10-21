@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, Pressable, StyleSheet, Platform, LayoutAnimation, UIManager } from "react-native";
 import { Muscle } from "../constants/muscles";
 
 type Exercise = {
@@ -16,6 +16,13 @@ type ExerciseRowProps = {
   children?: React.ReactNode;
 };
 
+ if (
+  Platform.OS === 'android' &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
 export default function ExerciseRow({ 
     exercise,
     isActive, 
@@ -24,8 +31,14 @@ export default function ExerciseRow({
     children
 } : ExerciseRowProps) {
     return (
-        <View>
-            <Pressable style={styles.row} onPress={onPress}>
+        <View style={styles.container}>
+            <Pressable style={styles.row} onPress={()=>{
+              LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+              onPress();
+              }}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: isActive }}
+            >
                 <View style={styles.left}>
                     <Text style={[styles.name, isActive && styles.nameActive]}> 
                         {exercise.name}
@@ -45,13 +58,15 @@ export default function ExerciseRow({
 
 
 const styles = StyleSheet.create({
+  container: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+  },
   row: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
   },
   left: {
     flex: 1,               // take remaining space

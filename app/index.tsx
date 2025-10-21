@@ -5,6 +5,7 @@ import ExerciseRow from "../components/ExerciseRow"
 export default function Index() {
 
   const[selectedExerciseID, setSelectedExerciseID] = useState<string | null>(null);
+  
   function handleSelect(id : string) {
     if (id === selectedExerciseID) {
       setSelectedExerciseID(null);
