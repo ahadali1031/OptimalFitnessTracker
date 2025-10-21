@@ -1,4 +1,4 @@
-import { Text, View, Pressable, TextInput } from "react-native";
+import { Text, View, Pressable, TextInput, LayoutAnimation } from "react-native";
 import { Muscle } from "../constants/muscles"
 import { useState } from "react";
 import ExerciseRow from "../components/ExerciseRow"
@@ -61,6 +61,24 @@ export default function Index() {
     setInput(exerciseId, "");
   }
 
+  function handleDeletePrevious(exerciseId: string, prevIndex: number) {
+    setWeightsExerciseHistory(prev => {
+      const list = prev[exerciseId] ?? [];
+      if (list.length <= 1) return prev;
+
+      const targetIndex = prevIndex + 1;
+      if (targetIndex < 1 || targetIndex >= list.length) return prev;
+
+      const nextList = list.slice();
+      nextList.splice(targetIndex, 1);
+
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+
+      return { ...prev, [exerciseId]: nextList };
+    });
+  }
+
+
 
   return (
     <View>
@@ -77,14 +95,20 @@ export default function Index() {
               <View style={{ flex: 1 }}>
                 <Text style={{ fontWeight: "600", marginBottom: 6 }}>Previous Weights:</Text>
                 {(() => {
-                  const previous = getList(exercise.id).slice(1).reverse();
+                  const previous = getList(exercise.id).slice(1);
                   if (previous.length === 0) {
                     return <Text style={{ color: "#6B7280" }}>None yet</Text>;
                   }
                   return previous.map((w, i) => (
-                    <Text key={`${exercise.id}-prev-${i}`} style={{ marginBottom: 4 }}>
-                      {w}
-                    </Text>
+                    <View style={{flexDirection: "row", alignItems: "baseline", marginBottom: 4}}>
+                      <View style={{ width: 20 }}>
+                        <Text style={{ textAlign: 'right' }}>{w}</Text>
+                      </View>
+
+                      <Pressable onPress={() => handleDeletePrevious(exercise.id, i)} hitSlop={8} style={{marginLeft: 10 }}>
+                        <Text style={{ color:"red" }}>X</Text>
+                      </Pressable>
+                    </View>
                   ));
                 })()}
               </View>
