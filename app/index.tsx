@@ -13,13 +13,22 @@ export default function Index() {
   ]
 
   const[selectedExerciseID, setSelectedExerciseID] = useState<string | null>(null);
-  const[activeExerciseIds, setActiveExerciseIds] = useState<string[]>(() => catalog.map(e => e.id));
+  const[activeExerciseIds, setActiveExerciseIds] = useState<string[]>(() => catalog.slice(0, 1).map(e => e.id));
   const [weightsExerciseHistory, setWeightsExerciseHistory] = useState<{ [key: string]: number[] }>(() =>
     Object.fromEntries(catalog.map(e => [e.id, []]))
   );
   const [inputByExercise, setInputByExercise] = useState<{ [key: string]: string }>({});
   function setInput(id: string, v: string) {
     setInputByExercise(prev => ({...prev, [id]: v}));
+  }
+  
+  function getAvailableIds() {
+    return catalog.filter(e => !activeExerciseIds.includes(e.id)).map(e => e.id);
+  }
+
+  function addExercise(id: string) {
+    setActiveExerciseIds(prev => (prev.includes(id) ? prev : [...prev, id]));
+    setWeightsExerciseHistory(prev => (prev[id] ? prev : { ...prev, [id]: [] }));
   }
 
   
@@ -83,6 +92,25 @@ export default function Index() {
 
   return (
     <View>
+      <Pressable
+        onPress={() => {
+          const next = getAvailableIds()[0];
+          if (next) return addExercise(next);
+        }}
+        style={{
+          alignSelf: "flex-end",
+          paddingVertical: 6,
+          paddingHorizontal: 10,
+          borderRadius: 8,
+          borderWidth: 1,
+          borderColor: "#E5E7EB",
+          marginBottom: 8,
+        }}
+      >
+        <Text>
+          + Add exercise
+        </Text>
+      </Pressable>
       { activeExerciseIds.map(id => {
         const exercise = catalog.find(e => e.id === id);
         if (!exercise) return null;
