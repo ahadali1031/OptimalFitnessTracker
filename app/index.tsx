@@ -32,9 +32,12 @@ export default function Index() {
   const [selectedExerciseID, setSelectedExerciseID] = useState<string | null>(
     null
   );
-  const [activeExerciseIds, setActiveExerciseIds] = useState<string[]>(() =>
-    catalog.slice(0, 1).map((e) => e.id)
-  );
+
+  const [workouts, setWorkouts] = useState<Record<string, {name: string; activeExerciseIds: string[] }>>({
+    default: {name: "Default Workout", activeExerciseIds: catalog.slice(0, 1).map((e) => e.id)}
+  });
+  const currentWorkoutId = "default";
+
   const [weightsExerciseHistory, setWeightsExerciseHistory] = useState<{
     [key: string]: number[];
   }>(() => Object.fromEntries(catalog.map((e) => [e.id, []])));
@@ -47,15 +50,24 @@ export default function Index() {
 
   function getAvailableIds() {
     return catalog
-      .filter((e) => !activeExerciseIds.includes(e.id))
+      .filter((e) => !workouts[currentWorkoutId].activeExerciseIds.includes(e.id))
       .map((e) => e.id);
   }
 
   function addExercise(id: string) {
-    setActiveExerciseIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
-    setWeightsExerciseHistory((prev) =>
-      prev[id] ? prev : { ...prev, [id]: [] }
-    );
+    setWorkouts(prev => {
+      const w = prev[currentWorkoutId];
+      if (!w) return prev;                      
+      if (w.activeExerciseIds.includes(id)) return prev; 
+      return {
+        ...prev,
+        [currentWorkoutId]: {
+          ...w,
+          activeExerciseIds: [...w.activeExerciseIds, id],
+        },
+      };
+    });
+    setWeightsExerciseHistory(prev => (prev[id] ? prev : { ...prev, [id]: [] }));
   }
 
   function handleSelect(id: string) {
@@ -107,20 +119,27 @@ export default function Index() {
 
       const nextList = list.slice();
       nextList.splice(targetIndex, 1);
-
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-
       return { ...prev, [exerciseId]: nextList };
     });
   }
 
   function removeExercise(id: string) {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setActiveExerciseIds((prev) => prev.filter((x) => x != id));
-    if (selectedExerciseID == id) {
-      setSelectedExerciseID(null);
-    }
+    setWorkouts(prev => {
+      const w = prev[currentWorkoutId];
+      if (!w) return prev;
+      return {
+        ...prev,
+        [currentWorkoutId]: {
+          ...w,
+          activeExerciseIds: w.activeExerciseIds.filter(x => x !== id),
+        },
+      };
+    });
+    if (selectedExerciseID === id) setSelectedExerciseID(null);
   }
+
 
   return (
     <View>
@@ -141,7 +160,7 @@ export default function Index() {
       >
         <Text>+ Add exercise</Text>
       </Pressable>
-      {activeExerciseIds.map((id) => {
+      {workouts[currentWorkoutId].activeExerciseIds.map((id) => {
         const exercise = catalog.find((e) => e.id === id);
         if (!exercise) return null;
         const isActive = id === selectedExerciseID;
