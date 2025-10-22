@@ -1,38 +1,64 @@
-import { Text, View, Pressable, TextInput, LayoutAnimation } from "react-native";
-import { Muscle } from "../constants/muscles"
+import {
+  Text,
+  View,
+  Pressable,
+  TextInput,
+  LayoutAnimation,
+} from "react-native";
+import { Muscle } from "../constants/muscles";
 import { useState } from "react";
-import ExerciseRow from "../components/ExerciseRow"
+import ExerciseRow from "../components/ExerciseRow";
 export default function Index() {
-
   const catalog = [
-    {id: "back-squat", name: "Back Squat", muscleGroups: [Muscle.QUADS, Muscle.GLUTES, Muscle.HAMSTRINGS]},
-    {id: "leg-extensions", name: "Leg Extensions", muscleGroups: [Muscle.QUADS]},
-    {id: "leg-curls", name: "Leg Curls", muscleGroups: [Muscle.HAMSTRINGS]},
-    {id: "calf-raises", name: "Calf Raises", muscleGroups: [Muscle.CALVES]},
-    {id: "bulgarian-split", name: "Bulgarian Split Squat", muscleGroups: [Muscle.QUADS, Muscle.HAMSTRINGS, Muscle.GLUTES]},
-  ]
+    {
+      id: "back-squat",
+      name: "Back Squat",
+      muscleGroups: [Muscle.QUADS, Muscle.GLUTES, Muscle.HAMSTRINGS],
+    },
+    {
+      id: "leg-extensions",
+      name: "Leg Extensions",
+      muscleGroups: [Muscle.QUADS],
+    },
+    { id: "leg-curls", name: "Leg Curls", muscleGroups: [Muscle.HAMSTRINGS] },
+    { id: "calf-raises", name: "Calf Raises", muscleGroups: [Muscle.CALVES] },
+    {
+      id: "bulgarian-split",
+      name: "Bulgarian Split Squat",
+      muscleGroups: [Muscle.QUADS, Muscle.HAMSTRINGS, Muscle.GLUTES],
+    },
+  ];
 
-  const[selectedExerciseID, setSelectedExerciseID] = useState<string | null>(null);
-  const[activeExerciseIds, setActiveExerciseIds] = useState<string[]>(() => catalog.slice(0, 1).map(e => e.id));
-  const [weightsExerciseHistory, setWeightsExerciseHistory] = useState<{ [key: string]: number[] }>(() =>
-    Object.fromEntries(catalog.map(e => [e.id, []]))
+  const [selectedExerciseID, setSelectedExerciseID] = useState<string | null>(
+    null
   );
-  const [inputByExercise, setInputByExercise] = useState<{ [key: string]: string }>({});
+  const [activeExerciseIds, setActiveExerciseIds] = useState<string[]>(() =>
+    catalog.slice(0, 1).map((e) => e.id)
+  );
+  const [weightsExerciseHistory, setWeightsExerciseHistory] = useState<{
+    [key: string]: number[];
+  }>(() => Object.fromEntries(catalog.map((e) => [e.id, []])));
+  const [inputByExercise, setInputByExercise] = useState<{
+    [key: string]: string;
+  }>({});
   function setInput(id: string, v: string) {
-    setInputByExercise(prev => ({...prev, [id]: v}));
+    setInputByExercise((prev) => ({ ...prev, [id]: v }));
   }
-  
+
   function getAvailableIds() {
-    return catalog.filter(e => !activeExerciseIds.includes(e.id)).map(e => e.id);
+    return catalog
+      .filter((e) => !activeExerciseIds.includes(e.id))
+      .map((e) => e.id);
   }
 
   function addExercise(id: string) {
-    setActiveExerciseIds(prev => (prev.includes(id) ? prev : [...prev, id]));
-    setWeightsExerciseHistory(prev => (prev[id] ? prev : { ...prev, [id]: [] }));
+    setActiveExerciseIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+    setWeightsExerciseHistory((prev) =>
+      prev[id] ? prev : { ...prev, [id]: [] }
+    );
   }
 
-  
-  function handleSelect(id : string) {
+  function handleSelect(id: string) {
     if (id === selectedExerciseID) {
       setSelectedExerciseID(null);
     } else {
@@ -50,7 +76,7 @@ export default function Index() {
   }
 
   function insertLatestWeight(id: string, weight: number) {
-    setWeightsExerciseHistory(prev => {
+    setWeightsExerciseHistory((prev) => {
       const current = prev[id] ?? [];
       const updated = [weight, ...current];
       return {
@@ -63,7 +89,7 @@ export default function Index() {
   function handleAdd(exerciseId: string) {
     const raw = (inputByExercise[exerciseId] ?? "").trim();
     if (raw === "") return;
-    const num = Number(raw)
+    const num = Number(raw);
     if (!Number.isFinite(num) || num < 0) {
       return;
     }
@@ -72,7 +98,7 @@ export default function Index() {
   }
 
   function handleDeletePrevious(exerciseId: string, prevIndex: number) {
-    setWeightsExerciseHistory(prev => {
+    setWeightsExerciseHistory((prev) => {
       const list = prev[exerciseId] ?? [];
       if (list.length <= 1) return prev;
 
@@ -88,7 +114,13 @@ export default function Index() {
     });
   }
 
-
+  function removeExercise(id: string) {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setActiveExerciseIds((prev) => prev.filter((x) => x != id));
+    if (selectedExerciseID == id) {
+      setSelectedExerciseID(null);
+    }
+  }
 
   return (
     <View>
@@ -107,37 +139,56 @@ export default function Index() {
           marginBottom: 8,
         }}
       >
-        <Text>
-          + Add exercise
-        </Text>
+        <Text>+ Add exercise</Text>
       </Pressable>
-      { activeExerciseIds.map(id => {
-        const exercise = catalog.find(e => e.id === id);
+      {activeExerciseIds.map((id) => {
+        const exercise = catalog.find((e) => e.id === id);
         if (!exercise) return null;
         const isActive = id === selectedExerciseID;
         return (
-          <ExerciseRow key={id}
+          <ExerciseRow
+            key={id}
             exercise={exercise}
             isActive={isActive}
             latestWeight={getLatestWeight(exercise.id)}
             onPress={() => handleSelect(exercise.id)}
+            onRemove={() => removeExercise(exercise.id)}
           >
-            <View style={{ flexDirection: "row", gap: 12, alignItems: "flex-start" }}>
+            <View
+              style={{
+                flexDirection: "row",
+                gap: 12,
+                alignItems: "flex-start",
+              }}
+            >
               <View style={{ flex: 1 }}>
-                <Text style={{ fontWeight: "600", marginBottom: 6 }}>Previous Weights:</Text>
+                <Text style={{ fontWeight: "600", marginBottom: 6 }}>
+                  Previous Weights:
+                </Text>
                 {(() => {
                   const previous = getList(exercise.id).slice(1);
                   if (previous.length === 0) {
                     return <Text style={{ color: "#6B7280" }}>None yet</Text>;
                   }
                   return previous.map((w, i) => (
-                    <View key={`${exercise.id}-prev-${i}`} style={{flexDirection: "row", alignItems: "baseline", marginBottom: 4}}>
-                      <View style={{ width: 30 }}>
-                        <Text style={{ textAlign: 'right' }}>{w}</Text>
+                    <View
+                      key={`${exercise.id}-prev-${i}`}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "baseline",
+                        marginBottom: 4,
+                      }}
+                    >
+                      <View style={{ width: 60 }}>
+                        <Text style={{ textAlign: "right" }}>{w}</Text>
                       </View>
 
-                      <Pressable onPress={() => handleDeletePrevious(exercise.id, i)} hitSlop={8} style={{marginLeft: 50 }}>
-                        <Text style={{ color:"red" }}>X</Text>
+                      <Pressable
+                        onPress={() => handleDeletePrevious(exercise.id, i)}
+                        hitSlop={8}
+                        style={{ marginLeft: 50 }}
+                      >
+                        <Text style={{ color: "red" }}>X</Text>
                       </Pressable>
                     </View>
                   ));
@@ -146,7 +197,9 @@ export default function Index() {
               <View style={{ minWidth: 120 }}>
                 <TextInput
                   value={inputByExercise[exercise.id] ?? ""}
-                  onChangeText={(t) => setInput(exercise.id, t.replace(/[^0-9]/g, ""))}
+                  onChangeText={(t) =>
+                    setInput(exercise.id, t.replace(/[^0-9]/g, ""))
+                  }
                   keyboardType="number-pad"
                   returnKeyType="done"
                   onSubmitEditing={() => handleAdd(exercise.id)}
@@ -174,10 +227,9 @@ export default function Index() {
                 </Pressable>
               </View>
             </View>
-
           </ExerciseRow>
         );
       })}
-    </View> 
+    </View>
   );
 }
